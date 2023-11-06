@@ -22,7 +22,7 @@ filename = None
 animalName = None
 
 
-
+#
 
 #Method to start video uncomment when on actual pi
 @Slot()
