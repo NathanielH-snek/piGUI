@@ -2,19 +2,21 @@ import sys
 import os.path
 from pathlib import Path
 from datetime import datetime
-#from picamera2 import Picamera2, Preview
-#from picamera2.encoders import Quality
-#from picamera2.encoders import H264Encoder
-#from picamera2.outputs import FfmpegOutput
-#from pathvalidate import sanitize_filepath
+from picamera2 import Picamera2, Preview
+from picamera2.encoders import Quality
+from picamera2.encoders import H264Encoder
+from picamera2.outputs import FfmpegOutput
+from pathvalidate import sanitize_filepath
 from time import sleep
 from datetime import datetime
-from PySide6.QtGui import QScreen, QGuiApplication
-from PySide6.QtWidgets import QApplication, QPushButton, QLabel, QLineEdit, QDialog, QMainWindow, QVBoxLayout, QHBoxLayout,QWidget, QGridLayout, QFileDialog, QTextEdit, QAbstractSlider, QSlider, QSpacerItem
-from PySide6.QtCore import Slot, Qt
+from PyQt6.QtGui import QScreen, QGuiApplication
+from PyQt6.QtWidgets import QApplication, QPushButton, QLabel, QLineEdit, QDialog, QMainWindow, QVBoxLayout, QHBoxLayout,QWidget, QGridLayout, QFileDialog, QTextEdit, QAbstractSlider, QSlider, QSpacerItem
+from PyQt6.QtCore import Qt
 
-#picam2 = Picamera2()
-#encoder = H264Encoder()
+picam2 = Picamera2()
+video_config = picam2.create_video_configuration()
+picam2.configure(video_config)
+encoder = H264Encoder()
 #encoderValue = 0
 defaultSavePath = Path('~/piGUI/Videos').expanduser()
 outputPath = defaultSavePath
@@ -24,24 +26,22 @@ animalName = None
 
 
 #Method to start video uncomment when on actual pi
-@Slot()
 def startVideo():
-    #dateAndTime = now.strftime("%m,%d,%Y--%H-%M-%S")
-    #filepath = str(outputPath) + "/" + str(animalName) + "-" str(dateAndTime) + ".mp4"
-    #filepath = sanitize_filepath(Path(filepath), platform='auto')
-    #output = FfmpegOutput(filepath)
-    #picam2.start_preview(Preview.QTGL)
-    #picam2.start_recording(encoder,output,Quality.VERY_HIGH)
+    now = datetime.now()
+    dateAndTime = now.strftime("%m,%d,%Y--%H-%M-%S")
+    filepath = str(outputPath) + "/" + str(animalName) + "-" + str(dateAndTime) + ".mp4"
+    filepath = sanitize_filepath(Path(filepath), platform='auto')
+    output = FfmpegOutput(filepath)
+    picam2.start_preview(Preview.QTGL)
+    picam2.start_recording(encoder,output,Quality.VERY_HIGH)
 
 #Method to stop video uncomment when on actual pi
-@Slot()
 def stopVideo():
-    #picam2.stop_recording()
-    #picam2.stop_preview()
+    picam2.stop_recording()
+    picam2.stop_preview()
 
-@Slot()
 def preview():
-    #picam2.start_preview(Preview.QTGL)
+    picam2.start_preview(Preview.DRM)
     
 
 
@@ -108,17 +108,17 @@ class myApp(QMainWindow):
         pageLayout.addItem(spacer,1,1,1,-1)
         
         buttonA = QPushButton("Preview")
-        buttonA.clicked.connect(fooB)
+        buttonA.clicked.connect(preview)
         buttonLayout.addWidget(buttonA)
         
         buttonB = QPushButton("Start")
-        #buttonA.clicked.connect(startVideo)
-        buttonB.clicked.connect(fooB)
+        buttonA.clicked.connect(startVideo)
+        #buttonB.clicked.connect(fooB)
         buttonLayout.addWidget(buttonB)
 
         buttonC = QPushButton("Stop")
-        #buttonB.clicked.connect(stopVideo)
-        buttonC.clicked.connect(fooC)
+        buttonB.clicked.connect(stopVideo)
+        #buttonC.clicked.connect(fooC)
         buttonLayout.addWidget(buttonC)
         
         pageLayout.addLayout(buttonLayout,6,1,1,-1)
