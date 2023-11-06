@@ -25,8 +25,8 @@ animalName = None
 
 
 #Method to start video uncomment when on actual pi
-#@Slot()
-#def startVideo():
+@Slot()
+def startVideo():
     #dateAndTime = now.strftime("%m,%d,%Y--%H-%M-%S")
     #filepath = str(outputPath) + "/" + str(animalName) + "-" str(dateAndTime) + ".mp4"
     #filepath = sanitize_filepath(Path(filepath), platform='auto')
@@ -35,13 +35,13 @@ animalName = None
     #picam2.start_recording(encoder,output,Quality.VERY_HIGH)
 
 #Method to stop video uncomment when on actual pi
-#@Slot()
-#def stopVideo():
+@Slot()
+def stopVideo():
     #picam2.stop_recording()
     #picam2.stop_preview()
 
-#@Slot()
-#def preview():
+@Slot()
+def preview():
     #picam2.start_preview(Preview.QTGL)
     
 
@@ -79,13 +79,13 @@ class myApp(QMainWindow):
             filename = dialog.selectedFiles()
             saveTextEditWidget.setText("Recording Path: " + str(filename))
 
-        def fooB():
-            getSavepath(savePathDisplay)
-            print("Start")
+        #def fooB():
+            #getSavepath(savePathDisplay)
+            #print("Start")
 
 
-        def fooC():
-            print("Stop")
+        #def fooC():
+            #print("Stop")
             
         def getText(text):
             global animalName
