@@ -41,7 +41,7 @@ def stopVideo():
     picam2.stop_preview()
 
 def preview():
-    picam2.start_preview(Preview.DRM)
+    picam2.start_preview(Preview.QTGL)
     
 
 
