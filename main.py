@@ -3,45 +3,68 @@ import os.path
 from pathlib import Path
 from datetime import datetime
 from picamera2 import Picamera2, Preview
+from picamera2.previews.qt import QGlPicamera2
 from picamera2.encoders import Quality
 from picamera2.encoders import H264Encoder
-from picamera2.outputs import FfmpegOutput
+from picamera2.outputs import FfmpegOutput, FileOutput
 from pathvalidate import sanitize_filepath
 from time import sleep
 from datetime import datetime
-from PyQt6.QtGui import QScreen, QGuiApplication
-from PyQt6.QtWidgets import QApplication, QPushButton, QLabel, QLineEdit, QDialog, QMainWindow, QVBoxLayout, QHBoxLayout,QWidget, QGridLayout, QFileDialog, QTextEdit, QAbstractSlider, QSlider, QSpacerItem
-from PyQt6.QtCore import Qt
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+import threading 
+import numpy as np
+
+class Worker(QRunnable):
+    def __init__(self,fn,*args,**kwargs):
+        super(Worker,self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        
+    @pyqtSlot()
+    def run(self):
+        self.fn(*self.args,**self.kwargs)
+            
 
 picam2 = Picamera2()
 video_config = picam2.create_video_configuration()
 picam2.configure(video_config)
+#picam2.video_configuration.controls.FrameRate = 30.0
 encoder = H264Encoder()
 #encoderValue = 0
-defaultSavePath = Path('~/piGUI/Videos').expanduser()
+defaultSavePath = Path('~/Videos').expanduser()
 outputPath = defaultSavePath
 filename = None
 animalName = None
 
+encoderON = False
 
 
 #Method to start video uncomment when on actual pi
 def startVideo():
+    global encoderON
     now = datetime.now()
-    dateAndTime = now.strftime("%m,%d,%Y--%H-%M-%S")
-    filepath = str(outputPath) + "/" + str(animalName) + "-" + str(dateAndTime) + ".mp4"
+    dateAndTime = now.strftime("%m%d%Y--%H-%M-%S")
+    filepath = f"{outputPath}/{animalName}-{dateAndTime}.mp4"
     filepath = sanitize_filepath(Path(filepath), platform='auto')
-    output = FfmpegOutput(filepath)
-    picam2.start_preview(Preview.QTGL)
-    picam2.start_recording(encoder,output,Quality.VERY_HIGH)
-
+    output = FfmpegOutput(str(filepath),"-fps 30")
+    #output = FileOutput(str(filepath))
+    if not encoderON:
+        picam2.start_recording(encoder,output,Quality.VERY_HIGH)
+        encoderON = True
+        setOverlay(encoderON)
 #Method to stop video uncomment when on actual pi
 def stopVideo():
-    picam2.stop_recording()
-    picam2.stop_preview()
-
-def preview():
-    picam2.start_preview(Preview.QTGL)
+    global encoderON
+    if encoderON:
+        picam2.stop_recording()
+        encoderON = False
+        setOverlay(encoderON)
+        
+#def preview():
+    #picam2.start_preview(Preview.QTGL)
     
 
 
@@ -90,6 +113,17 @@ class myApp(QMainWindow):
             global animalName
             animalName = text
         
+        global setOverlay
+        
+
+        def setOverlay(Start: bool):
+            overlay = np.zeros((300,400,4), dtype=np.uint8)
+            overlay[0:,0:] = (255,0,0,64)
+            if Start:
+                qpicamera2.set_overlay(overlay)
+            else:
+                qpicamera2.set_overlay(None)
+        
         self.setWindowTitle("piGUI")
 
         pageLayout = QGridLayout()
@@ -100,28 +134,31 @@ class myApp(QMainWindow):
         savePathDisplay.setText("Recording Path: " + str(outputPath))
         pageLayout.addWidget(savePathDisplay,0,1,1,-1)
         
+        qpicamera2 = QGlPicamera2(picam2, width=600, height=800, keep_ar=False)
+        pageLayout.addWidget(qpicamera2,1,1,20,-1)
+        
         qualityDisplay = QLabel(self)
         qualityDisplay.setText("Quality: MEDIUM")
-        pageLayout.addWidget(qualityDisplay,2,1)
+        pageLayout.addWidget(qualityDisplay,24,1)
         
         spacer = QSpacerItem(20,40)
-        pageLayout.addItem(spacer,1,1,1,-1)
+        pageLayout.addItem(spacer,2,1,1,-1)
         
-        buttonA = QPushButton("Preview")
-        buttonA.clicked.connect(preview)
-        buttonLayout.addWidget(buttonA)
+        #buttonA = QPushButton("Preview")
+        #buttonA.clicked.connect(preview)
+        #buttonLayout.addWidget(buttonA)
         
         buttonB = QPushButton("Start")
-        buttonA.clicked.connect(startVideo)
+        buttonB.clicked.connect(startVideo)
         #buttonB.clicked.connect(fooB)
         buttonLayout.addWidget(buttonB)
 
         buttonC = QPushButton("Stop")
-        buttonB.clicked.connect(stopVideo)
+        buttonC.clicked.connect(stopVideo)
         #buttonC.clicked.connect(fooC)
         buttonLayout.addWidget(buttonC)
         
-        pageLayout.addLayout(buttonLayout,6,1,1,-1)
+        pageLayout.addLayout(buttonLayout,28,1,1,-1)
         
         fileLabel = QLabel("Animal Name:")
         fileNameInput = QLineEdit()
@@ -129,13 +166,13 @@ class myApp(QMainWindow):
         
         fileNameLayout.addWidget(fileLabel)
         fileNameLayout.addWidget(fileNameInput)
-        pageLayout.addLayout(fileNameLayout,5,1,1,-1)
+        pageLayout.addLayout(fileNameLayout,27,1,1,-1)
 
-        pageLayout.addItem(spacer,4,1,1,-1)   
+        pageLayout.addItem(spacer,26,1,1,-1)   
              
         self.qualitySlider = SliderWLabel()
         self.qualitySlider.valueChanged.connect(setQualityText)
-        pageLayout.addWidget(self.qualitySlider,3,1,1,-1)
+        pageLayout.addWidget(self.qualitySlider,25,1,1,-1)
 
        
         widget = QWidget()
@@ -146,14 +183,14 @@ class myApp(QMainWindow):
         screen = app.primaryScreen()
         screenSize = screen.availableGeometry()
 
-        #x = (screenSize.width())/2
-        #y = (screenSize.height())/2
+        x = (screenSize.width())/2
+        y = (screenSize.height())/2
 
-        xx = 400
-        xy = 300
+        xx = 1200
+        xy = 1000
 
         center = QScreen.availableGeometry(screen).center()
-        self.setFixedSize(xx,xy)
+        self.setFixedSize(int(x),int(y))
           #window.size()
         fee = self.frameGeometry()
         fee.moveCenter(center)
@@ -186,7 +223,8 @@ class SliderWLabel(QSlider):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = myApp()
-    sys.exit(app.exec())
+    picam2.start()
+    sys.exit(app.exec_())
 
 
 
