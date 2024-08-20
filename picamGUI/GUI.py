@@ -10,9 +10,22 @@ from picamera2.outputs import FfmpegOutput, FileOutput
 from pathvalidate import sanitize_filepath
 from time import sleep
 from datetime import datetime
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt5.QtGui import QScreen
+from PyQt5.QtWidgets import (
+    QFileDialog, 
+    QMainWindow, 
+    QGridLayout, 
+    QHBoxLayout, 
+    QPushButton, 
+    QLabel, 
+    QSpacerItem, 
+    QLineEdit, 
+    QComboBox, 
+    QWidget, 
+    QSlider, 
+    QApplication
+)
+from PyQt5.QtCore import Qt, QRunnable, pyqtSlot
 import threading 
 import numpy as np
 import re
